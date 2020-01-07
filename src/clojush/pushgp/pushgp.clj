@@ -260,7 +260,7 @@
   (when (= (:parent-selection @push-argmap) :fitness-proportionate)
     (calculate-fitness-proportionate-probabilities pop-agents @push-argmap))
   ;; report and check for success
-  (let [[outcome best] (report-and-check-for-success (vec (doall (map deref pop-agents)))
+  (let [[outcome best population] (report-and-check-for-success (vec (doall (map deref pop-agents)))
                                                      generation @push-argmap)]
     (r/generation-data! [:outcome] outcome)
     (r/end-generation!)
@@ -303,7 +303,7 @@
                                   (println "Installing next generation...") (flush)
                                   (install-next-generation pop-agents child-agents @push-argmap)
                                   [next-novelty-archive nil])
-          :else [nil (final-report generation best @push-argmap)])))
+          :else [nil (final-report generation best population @push-argmap)])))
 
 (defn pushgp
   "The top-level routine of pushgp."

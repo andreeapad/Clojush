@@ -626,19 +626,19 @@
       (and exit-on-success
            (or (<= (:total-error best) error-threshold)
                (:success best)))
-      [:success best]
+      [:success best population]
       ; Fail max generations
       (>= generation max-generations)
-      [:failure best]
+      [:failure best population]
       ; Fail max program executions
       (>= @program-executions-count max-program-executions)
-      [:failure best]
+      [:failure best population]
       ; Fail max point evaluations
       (>= @point-evaluations-count max-point-evaluations)
-      [:failure best]
+      [:failure best population]
       ; Continue
       :else
-      [:continue best])))
+      [:continue best population])))
 
 (defn remove-function-values [argmap]
   (into {} (filter (fn [[k v]] (not (fn? v)))
@@ -695,7 +695,7 @@
 
 (defn final-report
   "Prints the final report of a PushGP run if the run is successful."
-  [generation best
+  [generation best population
    {:keys [error-function final-report-simplifications report-simplifications
            print-ancestors-of-solution problem-specific-report]}]
   (printf "\n\nSUCCESS at generation %s\nSuccessful program: %s\nErrors: %s\nTotal error: %s\nHistory: %s\nSize: %s\n\n"
@@ -707,4 +707,4 @@
   (let [simplified-best (auto-simplify best error-function final-report-simplifications true 500)]
     (println "\n;;******************************")
     (println ";; Problem-Specific Report of Simplified Solution")
-    (problem-specific-report simplified-best [] generation error-function report-simplifications)))
+    (problem-specific-report simplified-best population generation error-function report-simplifications)))
