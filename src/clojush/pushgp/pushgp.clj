@@ -336,3 +336,35 @@
            (if (nil? next-novelty-archive)
              return-val
              (recur (inc generation) next-novelty-archive))))))))
+
+(defn pushgp-custom
+  "The top-level routine of pushgp."
+  ([] (pushgp '()))
+  ([args initial-pop]
+   (reset! timer-atom (System/currentTimeMillis))
+   (load-push-argmap args)
+   (when (some? (:record-host @push-argmap))
+     (r/host! (str (:record-host @push-argmap))))
+   (random/with-rng (random/make-mersennetwister-rng (:random-seed @push-argmap))
+                    ;; set globals from parameters
+                    (reset-globals)
+                    (initial-report @push-argmap) ;; Print the inital report
+                    (r/uuid! (:run-uuid @push-argmap))
+                    (print-params (r/config-data! [:argmap] (dissoc @push-argmap :run-uuid)))
+                    (check-genetic-operator-probabilities-add-to-one @push-argmap)
+                    (timer @push-argmap :initialization)
+                    (when (:print-timings @push-argmap)
+                      (r/config-data! [:initialization-ms] (:initialization @timer-atom)))
+                    (println "\n;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
+                    (println "\nStarting...") (flush)
+                    (let [child-agents (make-child-agents @push-argmap)
+                          {:keys [rand-gens]} (make-rng @push-argmap)]
+                      ;TODO only have 1 generation with this input? or leave it running for a few generations and then update with the adversary?
+                      (loop [generation 0
+                             novelty-archive '()]
+                        (let [[next-novelty-archive return-val]
+                              (process-generation rand-gens initial-pop child-agents
+                                                  generation novelty-archive @push-argmap)]
+                          (if (nil? next-novelty-archive)
+                            return-val
+                            (recur (inc generation) next-novelty-archive))))))))
