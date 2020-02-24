@@ -335,7 +335,7 @@
 
 (defn report-and-check-for-success
   "Reports on the specified generation of a pushgp run. Returns the best
-   individual of the generation."
+   individual of the generation and the entire population."
   [population generation
    {:keys [error-function report-simplifications meta-error-categories
            error-threshold max-generations population-size

@@ -268,11 +268,13 @@
                                    (flush)
                                    [nil
                                     (when (:return-simplified-on-failure @push-argmap)
-                                      (auto-simplify best
+                                      [(auto-simplify best
                                                      (:error-function @push-argmap)
                                                      (:final-report-simplifications @push-argmap)
                                                      true
-                                                     500))])
+                                                     500)
+                                      population])
+                                    ])
           (= outcome :continue) (let [next-novelty-archive
                                       (list-concat novelty-archive
                                                    (select-individuals-for-novelty-archive
