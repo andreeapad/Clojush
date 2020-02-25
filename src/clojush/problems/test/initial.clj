@@ -243,7 +243,7 @@
 ;real (repeatedly 20 #(generate-seq sequence-length 0))
 ;fake (repeatedly 20 #(generate-random-seq sequence-length)
 
-(defn discriminator-result
+(defn discriminator-sigmoid-result
   [input program]
   (let [state (->> (make-push-state)
                    (push-item input :vector_integer)
@@ -266,8 +266,8 @@
       (for [i (range 20)
             :let [real (generate-seq sequence-length 0)
                   fake (generate-random-seq sequence-length)
-                  dx (discriminator-result real (:program individual))
-                  dgz (discriminator-result fake (:program individual))]]
+                  dx (discriminator-sigmoid-result real (:program individual))
+                  dgz (discriminator-sigmoid-result fake (:program individual))]]
 
         ; minimax log
         ; (- (+ (Math/log dx) (Math/log (- 1 dgz))))
@@ -302,11 +302,11 @@
                                     :uniform-mutation 0.5}
    :return-simplified-on-failure   true
    :max-points                     60
-   :max-generations                300
+   :max-generations                2
    :visualize                      false
    :print-csv-logs                 true
    :csv-log-filename              (str (.format (java.text.SimpleDateFormat. "dd-MM-yyyy HH-mm") (new java.util.Date))
-                                   " discr_sigmoid_300gen.csv")
+                                   " discr_sigmoid_2gen.csv")
    :csv-columns                    [:generation :total-error]
    :problem-specific-report        pushgp-result
    })
@@ -325,26 +325,17 @@
         ]
     (state-pretty-print state))
 
+
+  ;Print final population to file
+  (spit (str (.format (java.text.SimpleDateFormat. "dd-MM-yyyy HH-mm") (new java.util.Date))
+             " discr_sigmoid_2gen_population.edn") (with-out-str (pr pop-agents)))
+
+  ;(def read-pop (read-string (slurp "population.edn")))
+
   )
 
-(def best-simple-program (vector_integer_pushall
-               -0.01734426750584627
-               exec_stackdepth
-               float_cos
-               exec_dup_items
-               float_tan
-               integer_max
-               float_cos
-               integer_max
-               exec_do*count
-               (exec_do*count
-                 vector_integer_set
-                 exec_yankdup
-                 integer_dup_times
-                 exec_dup_times
-                 ())))
-
-(defn discriminator-actual-result
+; if using sigmoid, then use the other result function
+(defn discriminator-simple-result
   [input program]
   (let [state (->> (make-push-state)
                    (push-item input :vector_integer)
@@ -354,19 +345,52 @@
     result-float)
   )
 
-(defn evaluate-discr
-  [individual]
-    (for [i (range 20)
-          :let [real (generate-seq sequence-length 0)
-                fake (generate-random-seq sequence-length)
-                dx (discriminator-actual-result real (:program individual))
-                dgz (discriminator-actual-result fake (:program individual))]]
-       (println "Real: " real dx (> dx 0.5) " Fake: " fake dgz (< dgz 0.5))
+(defn evaluate-discr-simple
+  [program]
+  (loop [i 0
+         error-fake 0
+         error-real 0]
+    (if (= i 5000)
+      (println (/ error-fake 5000.) (/ error-real 5000.))
+      (let [real (generate-seq sequence-length 0)
+            fake (generate-random-seq sequence-length)
+            dx (discriminator-simple-result real program)
+            dgz (discriminator-simple-result fake program)]
+        (recur (inc i) (if (< dx 0.5)
+                         (inc error-real)
+                         error-real)
+               (if (> dgz 0.5)
+                 (inc error-fake)
+                 error-fake)))
       )
+    ;(println "Real: " real dx (> dx 0.5) " Fake: " fake dgz (< dgz 0.5))
+    )
   )
 
-;(defn gan-gp-run []
-;  (for [i (range 10)]
-;    ()
-;    )
-;  )
+(defn evaluate-discr-sigmoid
+  [program]
+  (loop [i 0
+         error-fake 0
+         error-real 0]
+    (if (= i 5000)
+      (println (/ error-fake 5000.) (/ error-real 5000.))
+      (let [real (generate-seq sequence-length 0)
+            fake (generate-random-seq sequence-length)
+            dx (discriminator-sigmoid-result real program)
+            dgz (discriminator-sigmoid-result fake program)]
+        (recur (inc i) (if (< dx 0.5)
+                         (inc error-real)
+                         error-real)
+               (if (> dgz 0.5)
+                 (inc error-fake)
+                 error-fake)))
+      )
+    ;(println "Real: " real dx (> dx 0.5) " Fake: " fake dgz (< dgz 0.5))
+    )
+  )
+
+(defn gan-gp-run []
+  (for [i (range 10)]
+    ()
+    )
+  )
