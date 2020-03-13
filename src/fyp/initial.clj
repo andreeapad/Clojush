@@ -2,9 +2,6 @@
 
 (use-clojush)
 
-(def ^:const sequence-length 6)
-(def ^:const start-state 0)
-
 (defn sigmoid
   [x]
   (float (/ 1 (+ 1 (Math/exp (- x)))))
@@ -60,17 +57,11 @@
 
 (def generator-atom-generators
   (concat (list
-            []
-            ;;; end constants
-            (fn [] (- (lrand-int 201) 100))                 ;Integer ERC [-1000,1000]
-            ;;; end ERCs
-            (tag-instruction-erc [:integer :vector_integer :exec] 1000)
-            (tagged-instruction-erc 1000)
-            ;;; end tag ERCs
-            'in1
-            ;;; end input instructions
+            []  ;; constants
+            (fn [] (- (lrand-int 201) 100)) ;; erc
+            'in1  ;; input instructions
             )
-          (registered-for-stacks [:integer :vector_integer :exec])))
+          (registered-for-stacks [:integer :float :vector_integer :exec])))
 
 (def generator-argmap
   {:error-function                 generator-simple-pattern-error
@@ -207,15 +198,9 @@
 
 (def discriminator-atom-generators
   (concat (list
-            []
-            ;;; end constants
-            (fn [] (rand))                                  ;
-            ;;; end ERCs
-            (tag-instruction-erc [:integer :float :vector_integer :exec] 100)
-            (tagged-instruction-erc 100)
-            ;;; end tag ERCs
-            'in1
-            ;;; end input instructions
+            []  ;; constants
+            (fn [] (rand))   ;; erc
+            'in1  ;; input instructions
             )
           (registered-for-stacks [:integer :float :vector_integer :exec])))
 
@@ -227,16 +212,34 @@
    :genetic-operator-probabilities {:alternation      0.5
                                     :uniform-mutation 0.5}
    :return-simplified-on-failure   true
-   :max-points                     60
+   :max-points                     200
    :max-generations                1
    :visualize                      false
    :print-csv-logs                 false
-   ;:csv-log-filename              (str (.format (java.text.SimpleDateFormat. "dd-MM-yyyy HH-mm") (new java.util.Date))
-   ;                                " discr_sigmoid_2gen.csv")
-   :csv-log-filename               "print_logs_test.csv"
+   :csv-log-filename               (str (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
+                                        " discr_sigmoid_300gen.csv")
+   ;:csv-log-filename               "print_logs_test.csv"
    :csv-columns                    [:generation :total-error]
    :problem-specific-report        pushgp-result
    })
+
+
+(def best-discr-program-single-training
+  '(exec_stackdepth
+     exec_do*vector_integer
+     (exec_dup_items
+       float_max
+       float_mult
+       -51.19677241067835
+       integer_dup
+       integer_dec
+       float_dec
+       float_dec
+       float_dec
+       float_dec
+       float_dec
+       float_yankdup)))
+
 
 (defn discr []
   (def pop-agents (pushgp discriminator-argmap))
@@ -254,8 +257,8 @@
 
 
   ;Print final population to file
-  ;(spit (str (.format (java.text.SimpleDateFormat. "dd-MM-yyyy HH-mm") (new java.util.Date))
-  ;           " discr_sigmoid_2gen_population.edn") (with-out-str (pr pop-agents)))
+  (spit (str (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
+             " discr_sigmoid_300gen_population.edn") (with-out-str (pr pop-agents)))
 
   ;(def read-pop (read-string (slurp "population.edn")))
 

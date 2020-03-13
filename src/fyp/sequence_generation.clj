@@ -1,5 +1,8 @@
 (in-ns 'fyp.gan-gp)
 
+(def ^:const sequence-length 12)
+(def ^:const start-state 0)
+
 
 (def transitions (to-array-2d [[0 0.5 0 0.5]
                                [0 0 0.25 0.75]
@@ -73,6 +76,33 @@
       (let [ r (inc (rand-int 9))]
         (recur (inc i) (conj output-sequence r)))
       output-sequence
+      )
+    )
+  )
+
+(defn test-no-of-possible-sequences []
+  (count (set (for [i (range 120000)
+                    :let [seq (generate-seq sequence-length 0)]]
+                seq
+                ))))
+
+(defn lazy-contains? [coll key]
+  (boolean (some #(= % key) coll)))
+
+(defn test-freq-random-in-real-samples [n]
+  (def real-samples (for [i (range 10000)
+                          :let [seq (generate-seq sequence-length 0)]]
+                      seq
+                      )
+    )
+  (loop [i 0
+         occurences 0
+         rand-seq (generate-random-seq sequence-length)]
+    (if (= i n)
+      (println (/ occurences n))
+      (let [result (if (true? (lazy-contains? real-samples rand-seq)) 1 0)]
+        (recur (inc i) (+ occurences result) (generate-random-seq sequence-length))
+        )
       )
     )
   )

@@ -25,13 +25,14 @@
         (if (vector? gen-result)
           (+ (* 100 (math/abs (- (count gen-result) sequence-length)))
              (let [discr-result (discriminator-sigmoid-result gen-result (:program best-discr))]
-               (Math/pow (- 1 discr-result) 2)))
+               (math/abs (- 1 discr-result))))
           10000
           )
         )
       )
     )
   )
+
 
 (def generator-gan-argmap
   {:error-function                 generator-gan-error
@@ -41,12 +42,12 @@
    :genetic-operator-probabilities {:alternation      0.5
                                     :uniform-mutation 0.5}
    :return-simplified-on-failure   true
-   :max-points                     100
+   :max-points                     500
    :max-generations                1
    :visualize                      false
    :print-csv-logs                 false
-   :csv-log-filename               (str (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
-                                        " generator_gan_test.csv")
+   :csv-log-filename               (str "C:\\Users\\Andreea\\OneDrive\\University\\third year\\final year project\\experiments\\" (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
+                                        " generator_gan_seq12_50x1.csv")
    :csv-columns                    [:generation :total-error]
    :problem-specific-report        pushgp-result
    })
@@ -76,12 +77,12 @@
    :genetic-operator-probabilities {:alternation      0.5
                                     :uniform-mutation 0.5}
    :return-simplified-on-failure   true
-   :max-points                     60
+   :max-points                     500
    :max-generations                1
    :visualize                      false
    :print-csv-logs                 false
-   :csv-log-filename               (str (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
-                                        " discr_gan_test.csv")
+   :csv-log-filename               (str "C:\\Users\\Andreea\\OneDrive\\University\\third year\\final year project\\experiments\\" (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
+                                        " discr_gan_seq12_50x1.csv")
    :csv-columns                    [:generation :total-error]
    :problem-specific-report        pushgp-result
    })
@@ -90,13 +91,14 @@
   (println ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
   (println "Starting train step " i)
   (println ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
-
   (println "Training Discriminator...")
   ; Train Discriminator giving previous saved population as input
   (def results (pushgp-custom discr-gan-argmap (pop-agents discr-pop)))
   (def best-discr (nth results 0))
   (def discr-pop (nth results 1))
 
+  (println ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
+  (println "")
   (println "Training Generator...")
   ; Train Generator giving previous saved population as input
   (def results (pushgp-custom generator-gan-argmap (pop-agents gen-pop)))
@@ -106,11 +108,11 @@
   ; Print results to file
   (csv-print discr-pop (+ i 1) discr-gan-argmap)
   (csv-print gen-pop (+ i 1) generator-gan-argmap)
-
   )
 
 
 (defn gan-gp-run
+  ;; with initial discr training
   [iterations]
   ; Train discr, save best discr, save discr population
   (def results (pushgp discriminator-argmap))
@@ -131,4 +133,38 @@
   (dotimes [i iterations]
     (train-step i))
 
+  ; Sort populations by error
+  (def sorted-gen-pop (sort-by :errors gen-pop))
+  (def sorted-discr-pop (sort-by :errors discr-pop))
+
+  ; Print final population to file
+  (spit (str "C:\\Users\\Andreea\\OneDrive\\University\\third year\\final year project\\experiments\\" (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
+             " discr_gan_50x1_population.edn") (with-out-str (pr sorted-discr-pop)))
+  (spit (str "C:\\Users\\Andreea\\OneDrive\\University\\third year\\final year project\\experiments\\" (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
+             " generator_gan_50x1_population.edn") (with-out-str (pr sorted-gen-pop)))
+
+  )
+
+(defn gan-gp-run1
+  ;; with no initial discr training
+  [iterations]
+
+  ; Train discr, save best discr, save discr population
+  (def results (pushgp discriminator-argmap))
+  (def best-discr (nth results 0))
+  (def discr-pop (nth results 1))
+  (println "Initialized first discriminator population.")
+
+  ; Do the same for generator
+  (def results (pushgp generator-gan-argmap))
+  (def best-generator (nth results 0))
+  (def gen-pop (nth results 1))
+  (println "Initialized first generator population.")
+
+  ; Print results to file
+  (csv-print discr-pop 0 discr-gan-argmap)
+  (csv-print gen-pop 0 generator-gan-argmap)
+
+  (dotimes [i iterations]
+    (train-step i))
   )

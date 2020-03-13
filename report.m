@@ -1,6 +1,6 @@
 %% Import data from text file.
 %% Initialize variables.
-filename = 'C:\Users\Andreea\OneDrive\University\third year\final year project\experiments\25-02-2020 16-37 discr_sigmoid_300gen.csv';
+filename = 'C:\Users\Andreea\OneDrive\University\third year\final year project\experiments\12-03-2020 discr_gan_50x1.csv';
 delimiter = ',';
 startRow = 2;
 
@@ -35,6 +35,7 @@ Y = ones(generations, 1);
 Z = ones(generations, 1);
 M = ones(generations, 1);
 B = ones(generations, 1);
+P = ones(generations, 1000);
 
 
 
@@ -45,6 +46,8 @@ for i=1:generations
     Z(i) = std(generatorlog1((1+populationSize*(i-1)):(populationSize*i),2));
     M(i) = median(generatorlog1((1+populationSize*(i-1)):(populationSize*i),2));
     B(i) = min(generatorlog1((1+populationSize*(i-1)):(populationSize*i),2));
+    size(generatorlog1((1+populationSize*(i-1)):(populationSize*i),2)')
+    P(i, :) = generatorlog1((1+populationSize*(i-1)):(populationSize*i),2)';
 
 end
 
@@ -53,7 +56,7 @@ end
 %plot(X(1:50), Y(1:50));
 %plot(X(:,10:end), Y(10:end, :))
 
-subplot(2,1,1);
+subplot(3,1,1);
 plot(X, Y,'DisplayName','mean')
 hold on
 plot(X, Z,'DisplayName','std')
@@ -62,17 +65,24 @@ title('Discriminator average error and standard deviation')
 xlabel('Generation')
 ylabel('Error')
 
-subplot(2,1,2);
+subplot(3,1,2);
 plot(X, B,'DisplayName','best')
 legend
 title('Discriminator best individual''s error')
 xlabel('Generation')
 ylabel('Error')
 
+subplot(3,1,3);
+
+scatter(generatorlog1(:, 1), generatorlog1(:, 2), 0.6);
+title('Discriminator population error')
+xlabel('Generation')
+ylabel('Error')
+
 saveLocation = 'C:\Users\Andreea\OneDrive\University\third year\final year project\experiments\graphs\'
 %fileName = strcat(saveLocation, datestr(now, 'dd-mmm-yy HH-MM'), ' discr_sigmoid.png')
 
-fileName = strcat(saveLocation, '25-02-2020 16-37 discr_sigmoid_300gen.png')
+fileName = strcat(saveLocation, '12-03-2020 discr_gan_50x1.png')
 saveas(gcf, fileName)
 
 
