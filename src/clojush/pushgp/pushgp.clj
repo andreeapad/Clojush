@@ -261,7 +261,7 @@
     (calculate-fitness-proportionate-probabilities pop-agents @push-argmap))
   ;; report and check for success
   (let [[outcome best population] (report-and-check-for-success (vec (doall (map deref pop-agents)))
-                                                     generation @push-argmap)]
+                                                     generation child-agents rand-gens @push-argmap)]
     (r/generation-data! [:outcome] outcome)
     (r/end-generation!)
     (cond (= outcome :failure) (do (printf "\nFAILURE\n")
@@ -273,7 +273,7 @@
                                                      (:final-report-simplifications @push-argmap)
                                                      true
                                                      500)
-                                      population])
+                                      population child-agents rand-gens])
                                     ])
           (= outcome :continue) (let [next-novelty-archive
                                       (list-concat novelty-archive
@@ -305,7 +305,7 @@
                                   (println "Installing next generation...") (flush)
                                   (install-next-generation pop-agents child-agents @push-argmap)
                                   [next-novelty-archive nil])
-          :else [nil (final-report generation best population @push-argmap)])))
+          :else [nil (final-report generation best population child-agents rand-gens @push-argmap)])))
 
 (defn pushgp
   "The top-level routine of pushgp."
@@ -342,7 +342,7 @@
 (defn pushgp-custom
   "The top-level routine of pushgp."
   ([] (pushgp '()))
-  ([args initial-pop]
+  ([args initial-pop child-agents rand-gens]
    (reset! timer-atom (System/currentTimeMillis))
    (load-push-argmap args)
    (when (some? (:record-host @push-argmap))
@@ -350,18 +350,17 @@
    (random/with-rng (random/make-mersennetwister-rng (:random-seed @push-argmap))
                     ;; set globals from parameters
                     (reset-globals)
-                    (initial-report @push-argmap) ;; Print the inital report
+                    ;(initial-report @push-argmap) ;; Print the inital report
                     (r/uuid! (:run-uuid @push-argmap))
-                    (print-params (r/config-data! [:argmap] (dissoc @push-argmap :run-uuid)))
+                    ;(print-params (r/config-data! [:argmap] (dissoc @push-argmap :run-uuid)))
                     (check-genetic-operator-probabilities-add-to-one @push-argmap)
                     (timer @push-argmap :initialization)
                     (when (:print-timings @push-argmap)
                       (r/config-data! [:initialization-ms] (:initialization @timer-atom)))
                     (println "\n;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
                     (println "\nStarting...") (flush)
-                    (let [child-agents (make-child-agents @push-argmap)
-                          {:keys [rand-gens]} (make-rng @push-argmap)]
-                      ;TODO only have 1 generation with this input? or leave it running for a few generations and then update with the adversary?
+                    (let [child-agents child-agents
+                          rand-gens rand-gens]
                       (loop [generation 0
                              novelty-archive '()]
                         (let [[next-novelty-archive return-val]
@@ -370,3 +369,4 @@
                           (if (nil? next-novelty-archive)
                             return-val
                             (recur (inc generation) next-novelty-archive))))))))
+

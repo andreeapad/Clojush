@@ -336,7 +336,7 @@
 (defn report-and-check-for-success
   "Reports on the specified generation of a pushgp run. Returns the best
    individual of the generation and the entire population."
-  [population generation
+  [population generation  child-agents rand-gens
    {:keys [error-function report-simplifications meta-error-categories
            error-threshold max-generations population-size
            print-errors print-history print-cosmos-data print-timings
@@ -385,6 +385,8 @@
                                   (apply +' (:errors err-fn-best))))
         psr-best (problem-specific-report total-error-best
                                           population
+                                          child-agents
+                                          rand-gens
                                           generation
                                           error-function
                                           report-simplifications)
@@ -695,7 +697,7 @@
 
 (defn final-report
   "Prints the final report of a PushGP run if the run is successful."
-  [generation best population
+  [generation best population child-agents rand-gens
    {:keys [error-function final-report-simplifications report-simplifications
            print-ancestors-of-solution problem-specific-report]}]
   (printf "\n\nSUCCESS at generation %s\nSuccessful program: %s\nErrors: %s\nTotal error: %s\nHistory: %s\nSize: %s\n\n"
@@ -707,4 +709,4 @@
   (let [simplified-best (auto-simplify best error-function final-report-simplifications true 500)]
     (println "\n;;******************************")
     (println ";; Problem-Specific Report of Simplified Solution")
-    (problem-specific-report simplified-best population generation error-function report-simplifications)))
+    (problem-specific-report simplified-best population child-agents rand-gens generation error-function report-simplifications)))

@@ -3,7 +3,6 @@
 (def ^:const sequence-length 12)
 (def ^:const start-state 0)
 
-
 (def transitions (to-array-2d [[0 0.5 0 0.5]
                                [0 0 0.25 0.75]
                                [0.33 0 0.33 0.33]

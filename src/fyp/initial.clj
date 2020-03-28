@@ -14,8 +14,8 @@
   )
 
 (defn pushgp-result
-  [best population generation error-function report-simplifications]
-  [best population]
+  [best population child-agents rand-gens generation error-function report-simplifications]
+  [best population child-agents rand-gens]
   )
 
 (defn generator-simple-pattern-error
@@ -61,7 +61,7 @@
             (fn [] (- (lrand-int 201) 100)) ;; erc
             'in1  ;; input instructions
             )
-          (registered-for-stacks [:integer :float :vector_integer :exec])))
+          (registered-for-stacks [:boolean :integer :float :vector_integer :exec ])))
 
 (def generator-argmap
   {:error-function                 generator-simple-pattern-error
@@ -71,11 +71,15 @@
    :genetic-operator-probabilities {:alternation      0.5
                                     :uniform-mutation 0.5}
    :return-simplified-on-failure   true
-   :max-points                     100
-   :max-generations                500
+   :max-points                     500
+   :max-generations                1
    :visualize                      false
-   :print-csv-logs                 true
-   :csv-log-filename               "generator_log1.csv"
+   :final-report-simplifications   250
+
+   :print-csv-logs                 false
+   :csv-log-filename              (str "C:\\Users\\Andreea\\OneDrive\\University\\third year\\final year project\\experiments\\"
+                                       (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
+                                       " generator_debug_simple_500_6.csv")
    :csv-columns                    [:generation :total-error]
    :problem-specific-report        pushgp-result
    })
@@ -85,6 +89,8 @@
   (let [state (->> (make-push-state)
                    (push-item input :integer)
                    (push-item input :input)
+                   ; Add random noise as input
+                   (push-item (rand) :float)
                    (run-push program))
         result-sequence-vector (top-item :vector_integer state)]
     result-sequence-vector
@@ -108,41 +114,41 @@
     (def state state))
   )
 
-(def sample-argmap
-  {:error-function                 (fn [individual]
-                                     (assoc individual
-                                       :errors
-                                       (doall
-                                         (for [input (range 10)]
-                                           (let [state (->> (make-push-state)
-                                                            (push-item input :integer)
-                                                            (push-item input :input)
-                                                            (run-push (:program individual)))
-                                                 top-int (top-item :integer state)]
-                                             (if (number? top-int)
-                                               (math/abs (- top-int
-                                                            (- (* input input input)
-                                                               (* 2 input input)
-                                                               input)))
-                                               1000))))))
-   :atom-generators                (list (fn [] (lrand-int 10))
-                                         'in1
-                                         'integer_div
-                                         'integer_mult
-                                         'integer_add
-                                         'integer_sub)
-   :parent-selection               :tournament
-   :genetic-operator-probabilities {:alternation      0.5
-                                    :uniform-mutation 0.5}
-   :visualize                      false
-   :problem-specific-report        pushgp-result
-   })
+;(def sample-argmap
+;  {:error-function                 (fn [individual]
+;                                     (assoc individual
+;                                       :errors
+;                                       (doall
+;                                         (for [input (range 10)]
+;                                           (let [state (->> (make-push-state)
+;                                                            (push-item input :integer)
+;                                                            (push-item input :input)
+;                                                            (run-push (:program individual)))
+;                                                 top-int (top-item :integer state)]
+;                                             (if (number? top-int)
+;                                               (math/abs (- top-int
+;                                                            (- (* input input input)
+;                                                               (* 2 input input)
+;                                                               input)))
+;                                               1000))))))
+;   :atom-generators                (list (fn [] (lrand-int 10))
+;                                         'in1
+;                                         'integer_div
+;                                         'integer_mult
+;                                         'integer_add
+;                                         'integer_sub)
+;   :parent-selection               :tournament
+;   :genetic-operator-probabilities {:alternation      0.5
+;                                    :uniform-mutation 0.5}
+;   :visualize                      false
+;   :problem-specific-report        pushgp-result
+;   })
 
-(defn test-give-population-as-input []
-  (def result (pushgp sample-argmap))
-  (def population (nth result 1))
-  (def new-pop (pushgp-custom sample-argmap (pop-agents population)))
-  )
+;(defn test-give-population-as-input []
+;  (def result (pushgp sample-argmap))
+;  (def population (nth result 1))
+;  (def new-pop (pushgp-custom sample-argmap (pop-agents population)))
+;  )
 ;
 ;
 ;(defn test-create-population []
@@ -202,7 +208,7 @@
             (fn [] (rand))   ;; erc
             'in1  ;; input instructions
             )
-          (registered-for-stacks [:integer :float :vector_integer :exec])))
+          (registered-for-stacks [:boolean :integer :float :vector_integer :exec])))
 
 (def discriminator-argmap
   {:error-function                 discriminator-error
@@ -212,13 +218,15 @@
    :genetic-operator-probabilities {:alternation      0.5
                                     :uniform-mutation 0.5}
    :return-simplified-on-failure   true
-   :max-points                     200
+   :max-points                     500
    :max-generations                1
    :visualize                      false
+   :final-report-simplifications   250
+
    :print-csv-logs                 false
-   :csv-log-filename               (str (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
-                                        " discr_sigmoid_300gen.csv")
-   ;:csv-log-filename               "print_logs_test.csv"
+   :csv-log-filename               (str "C:\\Users\\Andreea\\OneDrive\\University\\third year\\final year project\\experiments\\"
+                                        (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
+                                        " discr_sigmoid_seq12_300gen_3.csv")
    :csv-columns                    [:generation :total-error]
    :problem-specific-report        pushgp-result
    })
@@ -246,7 +254,7 @@
 
   ;testing discriminator result
   (def individual (nth pop-agents 0))
-  (let [input [4 3 8 9 1]
+  (let [input [4 3 8 9 1 1 1 2 1 1 1 1]
         state (->> (make-push-state)
                    (push-item input :vector_integer)
                    (push-item input :input)
@@ -257,8 +265,9 @@
 
 
   ;Print final population to file
-  (spit (str (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
-             " discr_sigmoid_300gen_population.edn") (with-out-str (pr pop-agents)))
+  (spit (str "C:\\Users\\Andreea\\OneDrive\\University\\third year\\final year project\\experiments\\"
+             (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
+             " discr_sigmoid_seq12_300gen_population.edn") (with-out-str (pr pop-agents)))
 
   ;(def read-pop (read-string (slurp "population.edn")))
 

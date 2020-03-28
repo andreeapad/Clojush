@@ -1,6 +1,7 @@
 %% Import data from text file.
 %% Initialize variables.
-filename = 'C:\Users\Andreea\OneDrive\University\third year\final year project\experiments\12-03-2020 discr_gan_50x1.csv';
+file = '28-03-2020 discr_gan_seq12_100_d';
+filename = strcat('C:\Users\Andreea\OneDrive\University\third year\final year project\experiments\',file, '.csv');
 delimiter = ',';
 startRow = 2;
 
@@ -46,7 +47,7 @@ for i=1:generations
     Z(i) = std(generatorlog1((1+populationSize*(i-1)):(populationSize*i),2));
     M(i) = median(generatorlog1((1+populationSize*(i-1)):(populationSize*i),2));
     B(i) = min(generatorlog1((1+populationSize*(i-1)):(populationSize*i),2));
-    size(generatorlog1((1+populationSize*(i-1)):(populationSize*i),2)')
+    size(generatorlog1((1+populationSize*(i-1)):(populationSize*i),2)');
     P(i, :) = generatorlog1((1+populationSize*(i-1)):(populationSize*i),2)';
 
 end
@@ -56,7 +57,8 @@ end
 %plot(X(1:50), Y(1:50));
 %plot(X(:,10:end), Y(10:end, :))
 
-subplot(3,1,1);
+%subplot(3,1,1);
+subplot(2,1,1);
 plot(X, Y,'DisplayName','mean')
 hold on
 plot(X, Z,'DisplayName','std')
@@ -65,24 +67,27 @@ title('Discriminator average error and standard deviation')
 xlabel('Generation')
 ylabel('Error')
 
-subplot(3,1,2);
+%subplot(3,1,2);
+subplot(2,1,2);
 plot(X, B,'DisplayName','best')
 legend
+ylim([0 20])
+xlim([0 generations])
 title('Discriminator best individual''s error')
 xlabel('Generation')
 ylabel('Error')
 
-subplot(3,1,3);
+% Discriminator
+%subplot(3,1,3);
+%scatter(generatorlog1(:, 1), generatorlog1(:, 2), 0.6);
+%title('Generator population error')
+%xlabel('Generation')
+%ylabel('Error')
 
-scatter(generatorlog1(:, 1), generatorlog1(:, 2), 0.6);
-title('Discriminator population error')
-xlabel('Generation')
-ylabel('Error')
-
-saveLocation = 'C:\Users\Andreea\OneDrive\University\third year\final year project\experiments\graphs\'
+saveLocation = 'C:\Users\Andreea\OneDrive\University\third year\final year project\experiments\graphs\';
 %fileName = strcat(saveLocation, datestr(now, 'dd-mmm-yy HH-MM'), ' discr_sigmoid.png')
 
-fileName = strcat(saveLocation, '12-03-2020 discr_gan_50x1.png')
-saveas(gcf, fileName)
+fileName = strcat(saveLocation, file,'.png')
+saveas(gcf, fileName);
 
 
