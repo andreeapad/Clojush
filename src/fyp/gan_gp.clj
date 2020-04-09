@@ -63,7 +63,7 @@
 
 (defn restrict-g-output
   [output]
-  (vec (map (fn [x] (mod x 5)) output))
+  (vec (map (fn [x] (inc( mod x 4))) output))
   )
 
 (defn generator-gan-error
@@ -103,7 +103,7 @@
    :print-csv-logs                 false
    :csv-log-filename               (str "C:\\Users\\Andreea\\OneDrive\\University\\third year\\final year project\\experiments\\"
                                         (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
-                                        " generator_gan_seq12_100_d1.csv")
+                                        " generator_gan_seq6_150_d.csv")
    :csv-columns                    [:generation :total-error]
    :problem-specific-report        pushgp-result
    })
@@ -144,7 +144,7 @@
    :print-csv-logs                 false
    :csv-log-filename               (str "C:\\Users\\Andreea\\OneDrive\\University\\third year\\final year project\\experiments\\"
                                         (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
-                                        " discr_gan_seq12_100_d1.csv")
+                                        " discr_gan_seq6_150_d.csv")
    :csv-columns                    [:generation :total-error]
    :problem-specific-report        pushgp-result
    })
@@ -210,46 +210,18 @@
   ; Print final population to file
   (spit (str "C:\\Users\\Andreea\\OneDrive\\University\\third year\\final year project\\experiments\\"
              (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
-             " discr_gan_seq12_100_d1_population.edn") (with-out-str (pr sorted-discr-pop)))
+             " discr_gan_seq6_150_d_population.edn") (with-out-str (pr sorted-discr-pop)))
   (spit (str "C:\\Users\\Andreea\\OneDrive\\University\\third year\\final year project\\experiments\\"
              (.format (java.text.SimpleDateFormat. "dd-MM-yyyy") (new java.util.Date))
-             " generator_gan_seq12_100_d1_population.edn") (with-out-str (pr sorted-gen-pop)))
+             " generator_gan_seq6_150_d_population.edn") (with-out-str (pr sorted-gen-pop)))
 
   ; Reading pop from file
   ;(def gen-pop (read-string (slurp "C:\\Users\\Andreea\\OneDrive\\University\\third year\\final year project\\experiments\\13-03-2020 generator_gan_seq12_50x1_population.edn")))
 
   ; Results from a part of the pop
-  (for [i (range 20)]
-    (generator-result sequence-length (:program (nth sorted-gen-pop i)))
+  (for [i (range 10)]
+    (restrict-g-output
+      (generator-result sequence-length
+                        (:program (nth sorted-gen-pop i))))
     )
-
-  ;; Load previous pop and best
-  ;(def best-discr (nth discr-pop 0))
-  ;(def best-generator (nth gen-pop 0))
-  ;; Population is saved sorted, so need to shuffle at the start
-  ;(def discr-pop (shuffle discr-pop))
-  ;(def gen-pop (shuffle gen-pop))
-  )
-
-
-(defn test-training-pushgp-custom [iterations]
-  (def results (pushgp generator-argmap))
-  (def best-generator (nth results 0))
-  (def gen-pop (nth results 1))
-  (def child-agents  (nth results 2))
-  (def rand-gens  (nth results 3))
-  (csv-print gen-pop 0 generator-argmap)
-
-  (dotimes [i iterations]
-      (println "")
-      (println ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
-      (println "Starting train step " i)
-
-      (def results (pushgp-custom generator-argmap (pop-agents gen-pop) child-agents rand-gens))
-      (def best-generator (nth results 0))
-      (def gen-pop (nth results 1))
-      (def child-agents  (nth results 2))
-      (def rand-gens  (nth results 3))
-      (csv-print gen-pop (+ i 1) generator-argmap)
-      )
   )
